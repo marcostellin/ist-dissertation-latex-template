@@ -208,10 +208,31 @@ LoRaWAN specifies an \gls{ADR} mechanism that is used to optimize the data rate,
 
 \subsection{Activation of \glspl{ED}}
 
-Before being able to participate in the network, each \gls{ED} must join the network using either \gls{OTA} activation or \gls{ABP} procedures. These procedures have the purpose of deriving the session keys that are necessary to encrypt the communication between each \gls{ED} and the \gls{NS}.
-In OTAA, before starting the join procedure, an ED requires a Device Extended Unique Identifier (DevEUI) that uniquely identifies the device, a Join EUI (JoinEUI) that uniquely identifies the JS that helps in the join procedure, an Application Key (AppKey) and a Network Key (NwkKey). The keys are 128 bits AES keys and must be stored in a secure way in the ED. The join procedure is carried out by exchanging a Join-Request and a Join-accept between the ED and the JS, during which the session keys are derived by using the AppKey and the NwkKey. The session keys are then used to encrypt the MAC payload using AES. During the procedure a network specific Device Address (DevAddr) is also assigned to the ED.
-The ABS procedure skips the Join-request / Join-accept message exchange, thus leaving to the network operator the responsibility of loading the sessions keys and the DevAddr in the ED.
- 
+A LoRaWAN network implementation is by default protected by some security mechanisms that guarantee data integrity and confidentiality and prevent replay attacks. These three requirements are guaranteed respectively by \glspl{MIC}, 128 bits \gls{AES} encryption and nonces. All security features require the presence of a set of session keys, that must be derived during the \gls{ED} mandatory join procedure.
+Each \gls{ED} must join the network using either \gls{OTA} activation or \gls{ABP}. The only difference between the two procedures is in the way in which the session keys are derived: in \gls{OTA} activation, keys are generated on-demand, while in \gls{ABP} keys are manually loaded. Only the most interesting \gls{OTA} activation is discussed in this section. \\
+
+\subsubsection{OTA Activation}
+
+Before starting the join procedure, each \gls{ED} is provided with four pieces of information that must be stored securely in the device:
+
+\begin{itemize}
+	\item \textbf{Join EUI:} a 64 bit global identifier of the \gls{JS} responsible for the join procedure;
+	\item \textbf{Device EUI (DevEUI):} a 64 bit global identifier of the \gls{ED}. The DevEUI is typically written also on a label on the back of the \gls{ED};
+	\item \textbf{Network Key (NwkKey):} an AES-128 root key, assigned when the \gls{ED} is manufactured, used to derive the Forwarding Network Session Integrity Key (FNwkSIntKey), the Serving Network Session Integrity Key (SNwkSIntKey) and the Network Session Encryption Key (NwkSEncKey);
+	\item \textbf{Application Key (AppKey):} an AES-128 root key, assigned when the \gls{ED} is manufactured, used to derive the Application Session Key (AppSKey).
+\end{itemize}
+
+The join procedure is always started by an \gls{ED} by sending a Join-Request message to the \gls{JS} containing the Join EUI, the DevEUI and a Device Nonce (DevNonce). The DevNonce is used to avoid the occurrence of replay attacks. The \gls{ED} must store the last used DevNonce value and increment it at each subsequent Join-Request. The last value of the nonce is also permanently stored in the \gls{NS} and every time a message is received, the DevNonce is compared with the stored value. If the received nonce is lower than the value stored in the \gls{NS}, the message is discarded. If the \gls{JS} accept the \gls{ED} registration, a Join-Accept message is returned in downlink. The message contains the join nonce, the Network id (NetID), the 32-bit Device Address (DevAddr) and a set of network configuration parameters. The join nonce is also in this case a progressive number, but it is used to derive the session keys. After the completion of the join procedure, the following session keys are established:
+
+\begin{itemize}
+
+\item \textbf{FNwkSIntKey:} used by the \gls{ED} to compute the \gls{MIC} of all uplink messages;
+\item \textbf{SNwkSIntKey:} used by the \gls{ED} to verify the \gls{MIC} of all downlink messages;
+\item \textbf{NwkSEncKey:} used by the \gls{ED} and the \gls{NS} to encrypt/decrypt uplink and downlink MAC commands;
+\item \textbf{AppSKey:} used by the \gls{ED} and the \gls{AS} to encrypt end-to-end the payload field of application-specific data messages. It's worth noting that even if confidentiality is guaranteed end-to-end, the integrity of messages is only guaranteed hop-by-hop, thus potentially allowing a malicious \gls{NS} to tamper with the data;
+
+\end{itemize}
+
 
 \section{Other LPWAN protocols}
 
