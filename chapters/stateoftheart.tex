@@ -28,4 +28,81 @@ In a disaster scenario, \glspl{UAV} mesh networks are not only limited to relayi
 
 \section{UAVs path planning and optimal placement for relaying}
 
-\textbf{Describe the existing solutions employing UAVs for relaying}
+Establishing a relay wireless ad hoc network of \glspl{UAV} comes with a set of non trivial problems: how to optimally place the \glspl{UAV} in a 3D environment and how to plan the movement of \glspl{UAV} to avoid collisions and at the same time reach the target objective. A problem that frequently arises is the connectivity vs coverage problem. In an ideal situation, the mesh network should provide the maximum possible coverage, while at the same time maintain the connectivity between its members. Unfortunately, due to the limited resources available (i.e. number of \glspl{UAV}), achieving both requirements is typically not realistic and therefore one must give priority to one or the other. The algorithms that have been developed to tackle the aforementioned problems fall in two main categories: centralized and distributed. Centralized algorithms relies on one single entity having full knowledge and control of the nodes forming the network. This approach typically produces close to optimal results, but suffers from single point of failure problem and, if the dimension of the problem is big, the amount of computations can give rise to substantial delays. Mixed integer programming techniques are typically used. On the other hand, distributed algorithms give more approximated solutions, but computations are typically smaller and distributed among the nodes, thus making the network more resilient in case of unexpected situations. Most of the existing distributed algorithms adapts concepts coming from physics or natural animal behaviour. In this section some of the existing approaches to tackle the aforementioned problems are presented. \\\\
+Chandrashekar et al. \cite{ref:soa-plac-centr1} study the problem of determining the minimum number of \glspl{UAV} necessary to provide full coverage to clusters of isolated ground nodes and at the same time maintain connectivity between \glspl{UAV}. All \glspl{UAV} fly at a fixed altitude $h$ and have a communication radius with ground nodes of $MaxRadius$. The solution is based on a centralized algorithm that runs every $\Delta T s$. First, the ground nodes are divided in clusters based on a connectivity matrix.
+For each cluster, the algorithm determines the set of neighbouring clusters, defined as the clusters in which the distance between the closest points is at most $2MaxRadius$. Starting from the cluster with fewer neighbours, the subset of neighbours that are also each other's neighbours is selected. The position of the \gls{UAV} that covers this subset of clusters (super cluster) is determined by means of a convex minimization problem:
+
+\[\min_{X} R\ \quad s.t. \quad ||X-p_i|| \leq R \quad i=1,\cdots,M \]
+
+where $X$ is the position of the \gls{UAV}, $R$ is the minimum radius of the circle covering the super cluster and $p_i$ is the position of the ground node of cluster $i$ which is closer to $C$. $C$ is determined by computing the center of gravity of the center points of each cluster belonging to the considered super cluster. If $R \geq 2MaxRadius$, the furthest cluster is removed and the computation is performed again until an acceptable solution is found. The aforementioned steps are repeated until all clusters, grouped in super clusters, have an associated \gls{UAV}. Finally, the \gls{UAV} to send to the new computed location is chosen by using a metric that minimizes the total travel distance of \glspl{UAV}. \\ \\
+Caillouet et al. \cite{ref:soa-plac-centr2} tackle the more challenging problem of optimally positioning the minimum number of \glspl{UAV}, taken from the set $\mathcal{U}$ of all available \glspl{UAV}, in order to cover a set $\mathcal{N}$ of targets on the ground, while maintaining the connectivity of the aerial mesh to a ground base station. Targets have a fixed position in the 2D plane $(x_n, y_n)$, while \glspl{UAV} can occupy any position $p = (x_u, y_u, h_u)$ in the 3D space. The range of UAV-to-UAV communication is a fixed distance $R_u$. UAV-to-Target range is instead a function of the altitude $h_u$ and of the half beamwidth $\theta$ of the directional antenna mounted on each \gls{UAV}:
+
+\[r_u^h \leq h_u \tan{\frac{\theta}{2}}\]
+
+Each \gls{UAV} has also an associated cost $c_u$, that can be used to model energy-related or cost-related constraints. The solution proposed by the authors is based on a multi-objective linear optimization problem, that minimizes, separately, the functions
+
+\begin{equation} \label{eq:lin-prob1}
+	\min \sum\limits_{p \in P} \sum\limits_{u \in \mathcal{U}} c_u z_p^u
+\end{equation}
+
+\begin{equation} \label{eq:lin-prob2}
+	\min \max_{u \in \mathcal{U}, p \in P} h_u(p) z_p^u
+\end{equation}
+
+where $z_p^u$ is a binary variable indicating if \gls{UAV} $u$ is deployed at position $p$. Intuitively, equation (\ref{eq:lin-prob1}) tries to minimize the cost of deployment, while equation (\ref{eq:lin-prob2}) tries to minimize the altitude, so to improve the air-to-ground channel quality. 
+Equations (\ref{eq:lin-prob1}) and (\ref{eq:lin-prob2}) are constrained by a set of nine inequalities, omitted for space reasons, modelling the positioning and connectivity constraints defined by the problem. An evaluation of the model performed by the authors proves that the algorithm always find an optimal solution in a reasonable amount of time (1000 s). The authors also state that the impact of the connectivity constraint more than doubles, in some circumstances, the number of deployed \glspl{UAV}. \\ \\
+Goddemeier et al. \cite{ref:soa-plac-pf} consider a distributed decision approach to maintain a coherent mesh network of \glspl{UAV} with the objective of exploring a 3D area. The swarm has also the additional requirement of keeping the connectivity to a ground base station. Two scenarios are studied by the authors: one in which the connectivity to the base station is permanent (Bounded Relaying) and one in which some disconnections are allowed for the purpose of extending the exploration (Release and Return). Each \gls{UAV} in the network has the ability of self-selecting, depending on the topology of the network, a different role: Scout Agents (SA) are assigned the task of exploration and sensing, Relay Nodes (RN) keep the communication between one or more \glspl{UAV} and the base station, Articulation Points (AP) link two clusters that otherwise would be fragmented and Returnees (R) are drones that, in a Release and Return scenario, are coming back to regain connectivity after being detached from the network. In order to maintain mesh connectivity, the authors propose a communication-aware algorithm based on virtual potential fields called Communication Aware Potential Fields (CAPF). According to this algorithm, each \gls{UAV} is subject to a virtual force
+
+\begin{equation}
+ \overrightarrow{F}_{dir} = \overrightarrow{F}_{conn} + \overrightarrow{F}_{AP} + \overrightarrow{F}_{CA} 
+\end{equation} 
+
+where $\overrightarrow{F}_{conn}$ is the force that keeps a \gls{UAV} connected to its neighbours, $\overrightarrow{F}_{AP}$ is the force that keeps a SN in the range of an AP or a RN and $\overrightarrow{F}_{CA}$ is the repelling force that keeps the \gls{UAV} away from obstacles (i.e. other \glspl{UAV}). The magnitude and direction of each force is determined by the strength of the communication between each pair of \glspl{UAV}, measured by the RSSI. As an example
+
+\begin{equation}
+	\overrightarrow{F}_{conn} = \sum\limits_{k=1}^{d} \overrightarrow{F}_{conn_k}
+\end{equation} 
+
+\begin{equation}
+	\overrightarrow{F}_{conn_k} = q |\Delta RSSI| \overrightarrow{d_0}_k
+\end{equation}
+
+For each \gls{UAV}, the $d$ neighbouring \glspl{UAV} with the best connections are chosen. For each pair, $\overrightarrow{F}_{conn_k}$ is computed: $\Delta RSSI$ measures how far is the current RSSI ($RSSI_{curr}$) from the maximum ($RSSI_{max}$) or minimum ($RSSI_{min}$) RSSI threshold, while $q$ determines if the force is attracting or repelling. If $RSSI_{curr}$ is above $RSSI_{max}$, the force is repelling, while if it is below $RSSI_{min}$, the force is attracting. The force is zero only when $RSSI_{curr}$ is between $RSSI_{min}$ and $RSSI_{max}$. The resulting force $\overrightarrow{F}_{dir}$ gives the direction in which the \gls{UAV} has to move in the current time step. \\ \\
+Di Felice et al. \cite{ref:soa-fanet2} propose a distributed approach similar to \cite{prevCit}, but based on \glspl{VSF}. The \gls{UAV} mesh network described in the paper is used to give coverage to a set of partitioned ground nodes. The mobility of \glspl{UAV} is subject to a distributed algorithm that enforces three ground rules: 
+
+\begin{enumerate}[label=(\roman*)]
+	\item connectivity of the aerial mesh must be preserved;
+	\item QoS of air-to-ground and air-to-air links must be guaranteed;
+	\item the number of covered ground nodes should be preserved and maximized.
+\end{enumerate}
+
+The aforementioned requirements are obtained by moving each \gls{UAV} in the mesh according to a virtual force $\overrightarrow{R}$ given by the sum of the individual spring forces associated with each wireless link established by the \gls{UAV}. In the most basic form, each force is computed as
+
+\begin{equation}
+	\overrightarrow{F} = -k \cdot (\overrightarrow{x} - l_0)
+\end{equation} 
+
+where $k$ is the stiffness of the virtual spring and $(\overrightarrow{x} - l_0)$ is the displacement of the spring from the neutral position $l_0$. Three types of \glspl{VSF}, with different parameters, are defined: one for air-to-air links, one for air-to-ground links and, if exploration is a requirement, one for attracting scout drones to new areas. The authors propose to compute the displacement $\delta = (\overrightarrow{x} - l_0)$ as a function of the link budget $LB(i,j)$ measuring the quality of the wireless link between each pair $(i,j)$ of \glspl{UAV}. $LB(i,j)$ and $\delta$ are defined as
+
+\begin{equation}
+	LB(i,j) = Pr^i_j - RS^i_{thr}
+\end{equation}  
+
+\begin{equation}
+	\delta = \sqrt[\alpha]{\frac{\max(LB(i,j), LB_{req})}{\min(LB(i,j), LB_{req})}} - 1
+\end{equation}
+
+$LB(i,j)$ is simply the difference between the received power $Pr^i_j$ and the receiver sensitivity $RS^i_{thr}$, while $\delta$ expresses how much the measured link budget deviates from the required link budget $LB_{req}$. $\alpha$ is the propagation decay exponent. The stiffness $k$ is defined differently depending on the type of link. For AtA links, $k$ is a fixed parameter between 0 and 1 and determines how quickly the mesh will react to meet the desired QoS requirements. For AtG links, $k$ is dynamic and defined as
+
+\begin{equation}
+	k_{AtG} = \frac{n_i}{max(n_j)\forall j \in Neigh_i}
+\end{equation}
+
+where $n_i$ is the number of ground nodes covered by the i-th \gls{UAV} and $n_j$ is the number of ground nodes covered by the best connected j-th \gls{UAV} belonging to the neighbours of the i-th \gls{UAV}. In this way, \glspl{UAV} connecting more ground nodes will oppose more resistance to movements that might reduce the number of covered nodes. At each time step $\Delta T$, the resulting force $\overrightarrow{R}$ is computed for each \gls{UAV} and, at the end of the interval, the \gls{UAV} moves with constant speed in the newly computed direction. This happens at the condition that the force magnitude is above a certain threshold and that the number of covered nodes does not decrease. The paper also defines an exploration phase, which can be useful to find additional ground nodes not yet covered by the mesh. Each $T_{scout}$ seconds, all the \glspl{UAV} that do not have any other \gls{UAV} in their visibility zone, become Scout Nodes (SN) with probability $p_{SCOUT}$. The least visited cell in the visibility zone is then selected for exploration and an attractive spring force is computed between the \gls{UAV} and the center of the cell. In this case the displacement $\delta$ is fixed to a reference value, while the stiffness is dynamic and given by
+
+\begin{equation}
+	k_{AtF} = \left( 1 - \frac{v_i(j)}{v_i^{Max}} \right) ^ {v_i^{Min} + 1}
+\end{equation}
+
+where $v_i^Max$ and $v_i^{Min}$ are the maximum and minimum number of times the \gls{UAV} has visited a cell, considering all the cells in the scenario. $v_i(j)$ represents the number of visits of the i-th \gls{UAV} to the j-th cell. Such definition allows for less visited cells to be explored with a higher priority.
+
