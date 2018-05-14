@@ -114,12 +114,12 @@ The LoRaWAN standard \cite{undefined}, promoted by the LoRa Alliance, defines th
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/lora-topology.pdf}
+    \includegraphics[draft, width=0.9\textwidth]{images/lora-chirps.jpg}
     \caption{Topology of a LoRaWAN network}
     \label{fig:lorawan-architecture}
 \end{figure}
 
-The overall architecture of LoRaWAN is shown in the picture \ref{fig:lorawan-architecture}.
+The overall architecture of LoRaWAN is shown in the picture \ref{missing}.
 LoRaWAN implements a star-of-stars topology interconnecting five different network elements:
 
 \begin{itemize}
@@ -155,12 +155,12 @@ All the \glspl{ED} must implement Class A operation mode and may optionally impl
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.9\textwidth]{images/mac-commands.pdf}
+    \includegraphics[draft, width=0.9\textwidth]{images/lora-chirps.jpg}
     \caption{MAC frames structure}
     \label{fig:lorawan-mac}
 \end{figure}
 
-The structure of LoRaWAN MAC frames is shown in Figure \ref{fig:lorawan-mac}.
+The structure of LoRaWAN MAC frames is shown in Figure \ref{undefined}.
 MAC frames are encapsulated in the physical layer packet payload and are formed by a \gls{MHDR}, a MAC payload (MACPayload) and a \gls{MIC}, that is used to verify the integrity of the PHY payload. 
 The \gls{MHDR} contains, among other fields, a 3-bit MType field that specifies the message type. The available types are listed in Table \ref{tab:mtypes}.
 
@@ -169,7 +169,7 @@ The \gls{MHDR} contains, among other fields, a 3-bit MType field that specifies 
 
 \begin{tabular}{|c|c|}
 \hline
-\textbf{MType} \& \textbf{Description}\\ \hline
+\textbf{MType} & \textbf{Description}\\ \hline
  000 & Join-Request  \\ \hline
  001 & Join-Accept \\ \hline
  010 & Unconfirmed Data Up  \\ \hline
