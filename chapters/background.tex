@@ -169,7 +169,7 @@ The \gls{MHDR} contains, among other fields, a 3-bit MType field that specifies 
 
 \begin{tabular}{|c|c|}
 \hline
-\textbf{MType} \& \textbf{Description}\\ \hline
+\textbf{MType} & \textbf{Description}\\ \hline
  000 & Join-Request  \\ \hline
  001 & Join-Accept \\ \hline
  010 & Unconfirmed Data Up  \\ \hline
@@ -203,6 +203,8 @@ MAC commands can be used to:
 \end{itemize}
 
 \subsection{Adaptive Data Rate}
+
+% Revise. Probably not specific enough
 
 LoRaWAN specifies an \gls{ADR} mechanism that is used to optimize the data rate, transmission power and spectrum usage of \glspl{ED} according to the quality of the link as measured by different metrics. When \gls{ADR} is active, the \gls{SF} of the modulation is adjusted in order to match the quality of the channel: it is increased when the \gls{SNR} is low in order to increase the receiver sensitivity and decreased when the \gls{SNR} is well above the threshold in order to minimize the power consumption and the time-on-air of the messages. An \gls{ADR} request is always started by an \gls{ED} by setting the \gls{ADR} bit in the FCtrl field. This bit signals to the \gls{NS} that the node is willing to accept \gls{ADR} parameters variations based on the observations collected by the \gls{NS}. It's worth noting that the specification doesn't specify an algorithm to be used for \gls{ADR}, thus leaving the implementation details to the manufacturer of the network equipment or the network operator. The \gls{ADR} should only be used by static nodes or by "smart" mobile nodes that are able to detect when they are parked for an extended period of time.
 
@@ -246,7 +248,71 @@ The join procedure is always started by an \gls{ED} by sending a Join-Request me
 %
 %A section describing routing algorithm for MANETs. Maybe move to implementation section to describe the routing algorithms available in ns-3 and the reason for the chosen algorithm.
 
-\section{Ad hoc wireless networks}
+\section{The WiFi protocol}
+
+% Description of WiFi protocol
+
+\gls{IEEE} 802.11, best known as WiFi, is a widely used MAC and Physical (PHY) layer protocol suite for establishing wireless \glspl{LAN} operating in the license-free 900 MHz, 2.4 GHz, 5.7 GHz and 60 GHz \gls{ISM} bands. The first version of the standard was published in 1999 by the \gls{IEEE}. While the MAC layer received little and sporadic modifications over the years, the PHY layer was subject to frequent revisions that had the main purpose of increasing the maximum throughput. In this section, only the original MAC specification and the most relevant PHY amendments (IEEE 802.11a/b/g/n/ac) are discussed.
+
+\subsection{IEEE 802.11 Architecture}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{images/wifi-architecture.pdf}
+    \caption{Architecture of an IEEE 802.11 network}
+    \label{fig:wifi-architecture}
+\end{figure}
+
+A IEEE 802.11 network can operate in one of two modes: ad-hoc mode or infrastructure mode. In ad-hoc mode each \gls{STA} can only establish a direct communication with other \glspl{STA} in their wireless coverage area, forming in this way an \gls{IBSS}. In infrastructure mode, \glspl{STA} connect exclusively to a special distribution \gls{STA}, called \gls{AP}, that must take care of coordinating and bridging the traffic among the connected \glspl{STA}. An \gls{AP} and its associated \glspl{STA} form what is called an infrastructure \gls{BSS}, characterized by a unique \gls{BSSID} (corresponding to the MAC of the \gls{AP}) and a \gls{SSID}. To extend the coverage of the network, multiple infrastructure \gls{BSS} can be interconnected through their \glspl{AP} by a \gls{DS}. The set of infrastructure \gls{BSS} having the same \gls{SSID} and interconnected by a \gls{DS}, form an \gls{ESS}.
+Both ad hoc mode and infrastructure mode architectures are depicted in Figure \ref{fig:wifi-architecture}.
+
+\subsection{IEEE 802.11 MAC Layer}
+
+IEEE 802.11 MAC layer is responsible for reliable data delivery, access control and security. The IEEE 802.11 MAC protocol, known as \gls{DFWMAC}, provides both a mandatory decentralized, contention-based access protocol called \gls{DCF} and an optional centralized, contention-free protocol called \gls{PCF}. \\\\
+The \gls{DCF} uses \gls{CSMA} to access the medium. According to this technique, each station listens to the medium and starts the transmission only if no other station is transmitting. If the medium is busy, the transmission is deferred to a later time after a backoff chosen at random. \gls{CSMA} with \gls{CD} is typically used in wired media and it relies on the capability of all stations to receive a feedback in case a collision occurs. This assumption is not valid in wireless media, since not all stations are in the communication range of all the other stations participating in the network and therefore a collision might occur at the receiver and go undetected at the transmitter. This issue is known as the hidden terminal problem. To overcome this complication, the \gls{DCF} uses \gls{CSMA} with \gls{CA}. As specified by this protocol, the transmitting station senses the medium for a fixed amount of time (\gls{DIFS}) and if at the end of the period the medium is still free, the frame is sent, otherwise a back-off time is uniformly chosen in the interval $[0, CW]$ and progressively decremented during the channel idle times. The value of $CW$ starts at $CW_{min}$ and it is doubled at every collision up to $CW_{max}$. When a data frame is successfully received, the receiving station, after a short fixed interval (\gls{SIFS}), replies with an acknowledgement frame (ACK). If the ACK is not received before the expiration of a timeout, a collision happened at the receiver and the sender needs to retransmit the frame. The medium access priority is determined by \glspl{IFS} of varying length, such that a larger \gls{IFS} implies a lower priority transmission. Since a \gls{SIFS} is smaller than a \gls{DIFS}, ACK frames have the priority over regular data frames. To reduce even more the chances of collisions, the \gls{DCF} implements an optional virtual carrier sense mechanism based on \gls{RTS} and \gls{CTS} frames. After \gls{DIFS}, a transmitter can send a \gls{RTS} frame with the indication of the reservation parameters. If the sender is allowed to transmit, the receiver replies with a \gls{CTS}. At this point, the exchange continues with the transmission of a data frame and the following ACK frame. Stations that are listening to the medium receives \gls{RTS} or \gls{CTS} frames containing the duration of the transmission and react by setting the \gls{NAV}, which is an indicator of how much a station should defer the access to the medium. In this way, even if a station is not able to hear the transmission of another station, it can determine that someone is transmitting simply by detecting an outgoing \gls{CTS} frame. \\\\
+The \gls{PCF} relies on a centralized polling mechanism and it's therefore available only to networks working in infrastructure mode, where the \gls{AP} acts as polling coordinator. In order for \gls{PCF} and \gls{DCF} to coexist, time is divided in slots called \textit{superframes}. The first part of a superframe is reserved for contention-free access. During this time, the polling coordinator gains control of the medium by waiting for the duration of a \gls{PIFS} (which is shorter than a \gls{DIFS}) and then sending a beacon that specifies the maximum duration of the \gls{PCF} period. All the stations receiving the beacon set their \gls{NAV} according to the specified duration. Finally, the polling coordinator polls the stations in the polling list one by one. \\ \\
+The correct operation of a IEEE 802.11 network depends on the periodic broadcast of beacon frames containing information about the \gls{BSS}, e.g. the timestamp, the beacon interval, the \gls{SSID}, the capabilities of the network, the \gls{DSSS} parameters and the \gls{PCF} parameters. Moreover beacons are necessary for synchronizing the stations in the \gls{BSS}. Beacons periodic broadcasting is typically performed by the \gls{AP}, but in a \gls{IBSS}, due to the lack of a central coordinator, such function is taken in turn by all the stations. Each station randomly sets a timer and a beacon is sent when the timer expires and no other beacon is received in the meanwhile.
+
+%Something about MAC enhancements of 802.11n + maybe MAC frame structure
+
+\subsection{IEEE 802.11 PHY Layer}
+
+The IEEE 802.11 PHY layer evolved rapidly after the first 1997 draft. The first version of the standard, never actually implemented, specifies a physical layer based on \gls{DSSS} and \gls{FHSS}, with a maximum bitrate of 2 Mbps. Since then, many amendments, improving the efficiency and the bitrate of the PHY layer have been issued. The main amendments and their characteristics are discussed in this section. Table \ref{table} summarizes some of the most important features of each amendment.
+
+%Describe channel structure...
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1\textwidth]{images/wifi-channels-24.png}
+    \caption{Channels in the 2.4 GHz band \cite{appinwififolder}}
+    \label{fig:wifi-channels-24}
+\end{figure}
+
+
+\subsubsection{IEEE 802.11b}
+
+IEEE 802.11b is the first revision that has been broadly implemented in consumer and enterprise devices. It shares with the original PHY implementation the use of the \gls{DSSS} modulation and of the 2.4 GHz band, but with the advantage of an increased maximum raw bitrate of 11 Mbit/s. This huge bitrate increment was made possible by substituting Barker's code used in \gls{DSSS} with the more efficient Complementary Code Keying, that allowed for more bits to be encoded in the spreading sequence. The most critical part of 802.11b is the use of the 2.4 GHz band, which is heavily used by many electro-domestic devices. Moreover, as shown in Figure \ref{fig:wifi-channels-24}, depending on regional regulations, only three or four 20 MHz-wide non-overlapping channels are available in the 2.4 GHz band, thus increasing the chance of interference even more.
+
+\subsubsection{IEEE 802.11a}
+
+IEEE 802.11a has been released almost at the same time of IEEE 802.11b, but has never been widely adopted, due to the popularity of IEEE 802.11b and the high cost of producing hardware operating in the 5 GHz band. This revision substitutes the original \gls{DSSS} modulation with a more efficient \gls{OFDM} with 52 sub-carriers, that allows a maximum bitrate of 54 Mbit/s. The biggest advantage of IEEE 802.11a over IEEE 802.11b is the use of the 5 GHz band, which is far less congested than the 2.4 GHz band. Moreover, the presence of 24 non-overlapping channels guarantees a significant increase in capacity. The only disadvantage is the slightly reduced range due to the worse propagation characteristics of the signal at higher frequencies, but this is counterbalanced by the good properties of \gls{OFDM} in terms of attenuation of the effects of multipath fading.
+
+\subsubsection{802.11g}
+
+IEEE 802.11g has been issued in 2003 and immediately reached high success, thanks to the rapid increase in demand of higher throughput wireless networks. For the purpose of compatibility with IEEE 802.11b, this new revision operates in the 2.4 GHz band and offers some additional mechanisms to ensure interoperability between the two protocols at the expense of the maximum achievable throughput of the network. IEEE 802.11g uses the same \gls{OFDM} modulation used by IEEE 802.11a, thus achieving a maximum bitrate of 54 Mbit/s. For backwards compatibility, lower data rates with \gls{DSSS} and Complementary Code Keying are supported.
+
+\subsubsection{802.11n}
+
+IEEE 802.11n introduces enhancements to both the PHY and MAC layer that allow to reach a maximum bitrate of 600 Mbit/s. This is made possible by taking advantage of wider channels (40 MHz), shorter guard bands (400 ns) and especially multiple antennas (MIMO) that can differentiate up to four simultaneous spatial streams in the same channel. Beamforming is also supported. The standard can operate on both the 2.4 GHz and the 5 GHz bands, but protection mechanisms need to be established in the 2.4 GHz band to avoid interference with legacy devices. In fact, using a 40 MHz channel results in the occupation of 9 of the 14 available channels. The standard support various combinations of modulation schemes (up to 64 QAM) and coding rates (up to 5/6), that allow to adapt the data rates to the condition of the channel and of the environment.
+
+\subsubsection{802.11ac}
+
+IEEE 802.11ac builds on the features of IEEE 802.11n and introduces enhancements with the explicit purpose of supporting very high throughput applications, such as multimedia applications. The standard now supports the bonding of four channels (80 MHz) or even eight channels (160 MHz), a denser modulation (256 QAM) and even more MIMO streams (up to 8 simultaneous spatial streams). MIMO is also extended to support multiple users (MU-MIMO), a technology that allows to send multiple frames to multiple clients at the same time over the same spectrum. All these features are expected to produce a maximum bitrate of 3.47 Gbit/s, but the first wave of products is expected to achieve lower bitrates (1.3 Gbit/s). IEEE 802.11ac only operates in the 5 GHz band, thus dropping the backward compatibility with 802.11b/g devices, but integrating almost seamlessly 802.11a/n devices with very little adaptations.
+
+\section{Ad Hoc Wireless Networks Protocols}
+
+%Quick description of main routing protocols
+
+% 24/05 - 25/05
 
 \section{Unmanned Aerial Vehicles}
 
